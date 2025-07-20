@@ -13,10 +13,10 @@ import base64
 from deepface import DeepFace
 import numpy as np
 
-# Add paths for the restructured project
+# Add paths for the clean project structure
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.join(project_root, 'models'))
-sys.path.append(os.path.join(project_root, 'utils'))
+sys.path.append(os.path.join(project_root, 'src', 'models'))
+sys.path.append(os.path.join(project_root, 'src', 'utils'))
 
 # Import PSGAN components
 from psgan import Inference, PostProcess
@@ -24,8 +24,8 @@ from setup import setup_config, setup_argparser
 import argparse
 
 app = Flask(__name__, 
-           template_folder=os.path.join(project_root, 'web_app', 'templates'),
-           static_folder=os.path.join(project_root, 'web_app', 'static'))
+           template_folder=os.path.join(project_root, 'src', 'core', 'templates'),
+           static_folder=os.path.join(project_root, 'src', 'core', 'static'))
 
 # Configure logging
 logging.basicConfig(
