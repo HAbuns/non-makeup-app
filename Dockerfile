@@ -4,8 +4,8 @@ FROM python:3.9-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    FLASK_APP=app.py \
+    PYTHONPATH=/app/src/models:/app/src/utils \
+    FLASK_APP=src/api/app.py \
     FLASK_ENV=production
 
 # Install system dependencies
@@ -49,7 +49,7 @@ RUN useradd --create-home --shell /bin/bash psgan && \
 USER psgan
 
 # Set permissions
-RUN chmod +x app.py run_app.py
+RUN chmod +x src/api/app.py run_app.py
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
@@ -59,4 +59,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 EXPOSE 5000
 
 # Run the application
-CMD ["python", "app.py"]
+CMD ["python", "src/api/app.py"]

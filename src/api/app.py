@@ -40,11 +40,11 @@ logger = logging.getLogger(__name__)
 
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['UPLOAD_FOLDER'] = os.path.join(project_root, 'datasets', 'results', 'uploads')  # Temporary uploads
-app.config['RESULT_FOLDER'] = os.path.join(project_root, 'datasets', 'results', 'results')  # Temporary results
-app.config['SAVED_UPLOADS_FOLDER'] = os.path.join(project_root, 'datasets', 'results', 'saved_uploads')  # Permanent uploads
-app.config['SAVED_RESULTS_FOLDER'] = os.path.join(project_root, 'datasets', 'results', 'saved_results')  # Permanent results
-app.config['REFERENCE_FACES_FOLDER'] = os.path.join(project_root, 'datasets', 'reference_faces')  # Auto-selected reference faces
+app.config['UPLOAD_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'results', 'uploads')  # Temporary uploads
+app.config['RESULT_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'results', 'results')  # Temporary results
+app.config['SAVED_UPLOADS_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'results', 'saved_uploads')  # Permanent uploads
+app.config['SAVED_RESULTS_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'results', 'saved_results')  # Permanent results
+app.config['REFERENCE_FACES_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'reference_faces')  # Auto-selected reference faces
 
 # Ensure all directories exist
 for folder in ['UPLOAD_FOLDER', 'RESULT_FOLDER', 'SAVED_UPLOADS_FOLDER', 'SAVED_RESULTS_FOLDER', 'REFERENCE_FACES_FOLDER']:
@@ -72,9 +72,9 @@ def initialize_models():
         
         # Setup configuration
         parser = argparse.ArgumentParser()
-        parser.add_argument("--config_file", default="configs/base.yaml")
+        parser.add_argument("--config_file", default=os.path.join(project_root, "src", "utils", "configs", "base.yaml"))
         parser.add_argument("--device", default="cpu")
-        parser.add_argument("--model_path", default="assets/models/G.pth")
+        parser.add_argument("--model_path", default=os.path.join(project_root, "docs", "assets", "models", "G.pth"))
         parser.add_argument("opts", nargs=argparse.REMAINDER, default=[])
         
         args = parser.parse_args([])
@@ -373,15 +373,15 @@ def upload_file():
             return jsonify({'error': 'No suitable reference face found'}), 500
         
         reference_filename = os.path.basename(reference_path)
-        logger.info(f"Sử dụng auto-selected reference: {reference_filename}")
+        logger.info(f"Using auto-selected reference: {reference_filename}")
         
         # Check if models are initialized
         if inference_model is None or postprocess_model is None:
-            logger.error("PSGAN models chưa được khởi tạo")
+            logger.error("PSGAN models not initialized")
             return jsonify({'error': 'PSGAN models not initialized. Please restart the server.'}), 500
 
         # Perform makeup transfer
-        logger.info("Bắt đầu quá trình makeup transfer...")
+        logger.info("Starting makeup transfer process...")
         source_image = Image.open(source_temp_path).convert("RGB")
         reference_image = Image.open(reference_path).convert("RGB")
         
@@ -389,11 +389,11 @@ def upload_file():
         result_image, face = inference_model.transfer(source_image, reference_image, with_face=True)
         
         if result_image is None:
-            logger.error("Không phát hiện được khuôn mặt trong ảnh source")
+            logger.error("No face detected in source image")
             return jsonify({'error': 'Face not detected in source image. Please try another image.'}), 400
         
         # Post-process the result
-        logger.info("Post-processing kết quả...")
+        logger.info("Post-processing result...")
         source_crop = source_image.crop((face.left(), face.top(), face.right(), face.bottom()))
         final_result = postprocess_model(source_crop, result_image)
         
@@ -405,7 +405,7 @@ def upload_file():
         final_result.save(result_temp_path)
         final_result.save(result_saved_path)
         
-        logger.info(f"Lưu kết quả: {result_saved_path}")
+        logger.info(f"Result saved: {result_saved_path}")
         
         # Save metadata as JSON
         metadata = {
@@ -425,7 +425,7 @@ def upload_file():
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=2)
             
-        logger.info(f"Lưu metadata: {metadata_path}")
+        logger.info(f"Metadata saved: {metadata_path}")
         
         # Convert images to base64 for display
         source_b64 = image_to_base64(source_image)
@@ -459,38 +459,38 @@ def upload_file():
         })
         
     except Exception as e:
-        logger.error(f"Lỗi trong quá trình upload và processing: {str(e)}")
+        logger.error(f"Error in upload and processing: {str(e)}")
         return jsonify({'error': f'Processing failed: {str(e)}'}), 500
 
 @app.route('/download/<filename>')
 def download_result(filename):
     """Download result image"""
     try:
-        logger.info(f"Request download file: {filename}")
+        logger.info(f"Download request for file: {filename}")
         
         # Try temp results first
         result_path = os.path.join(app.config['RESULT_FOLDER'], filename)
         if os.path.exists(result_path):
-            logger.info(f"Download từ temp folder: {result_path}")
+            logger.info(f"Download from temp folder: {result_path}")
             return send_file(result_path, as_attachment=True)
         
         # Try saved results
         saved_result_path = os.path.join(app.config['SAVED_RESULTS_FOLDER'], filename)
         if os.path.exists(saved_result_path):
-            logger.info(f"Download từ saved folder: {saved_result_path}")
+            logger.info(f"Download from saved folder: {saved_result_path}")
             return send_file(saved_result_path, as_attachment=True)
         
-        logger.warning(f"File không tồn tại: {filename}")
+        logger.warning(f"File not found: {filename}")
         return jsonify({'error': 'File not found'}), 404
     except Exception as e:
-        logger.error(f"Lỗi download file: {str(e)}")
+        logger.error(f"Error downloading file: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/gallery')
 def view_gallery():
     """View all saved results"""
     try:
-        logger.info("Truy cập trang gallery")
+        logger.info("Accessing gallery page")
         
         saved_results = []
         saved_results_dir = app.config['SAVED_RESULTS_FOLDER']
@@ -512,25 +512,25 @@ def view_gallery():
                         saved_results.append(metadata)
                 
                 except Exception as e:
-                    logger.warning(f"Không thể đọc metadata file {filename}: {e}")
+                    logger.warning(f"Cannot read metadata file {filename}: {e}")
                     continue
         
         # Sort by timestamp, newest first
         saved_results.sort(key=lambda x: x['timestamp'], reverse=True)
         
-        logger.info(f"Tìm thấy {len(saved_results)}/{metadata_count} kết quả hợp lệ")
+        logger.info(f"Found {len(saved_results)}/{metadata_count} valid results")
         
         return render_template('gallery.html', results=saved_results)
         
     except Exception as e:
-        logger.error(f"Lỗi khi load gallery: {str(e)}")
+        logger.error(f"Error loading gallery: {str(e)}")
         return jsonify({'error': f'Failed to load gallery: {str(e)}'}), 500
 
 @app.route('/view_result/<session_id>')
 def view_result(session_id):
     """View a specific result with metadata"""
     try:
-        logger.info(f"Request xem result cho session: {session_id}")
+        logger.info(f"Request to view result for session: {session_id}")
         
         # Find metadata file for this session
         saved_results_dir = app.config['SAVED_RESULTS_FOLDER']
@@ -538,7 +538,7 @@ def view_result(session_id):
                          if f.startswith('metadata_') and session_id in f]
         
         if not metadata_files:
-            logger.warning(f"Không tìm thấy metadata cho session: {session_id}")
+            logger.warning(f"No metadata found for session: {session_id}")
             return jsonify({'error': 'Result not found'}), 404
         
         metadata_path = os.path.join(saved_results_dir, metadata_files[0])
@@ -550,7 +550,7 @@ def view_result(session_id):
         result_path = os.path.join(saved_results_dir, metadata['result_filename'])
         source_path = os.path.join(app.config['SAVED_UPLOADS_FOLDER'], metadata['source_filename'])
         
-        # Reference path là từ reference_faces folder
+        # Reference path from reference_faces folder
         reference_path = os.path.join(app.config['REFERENCE_FACES_FOLDER'], metadata['reference_filename'])
         
         # Convert to base64 for display
@@ -561,19 +561,19 @@ def view_result(session_id):
         if os.path.exists(result_path):
             result_image = Image.open(result_path)
             result_b64 = image_to_base64(result_image)
-            logger.info("Load result image thành công")
+            logger.info("Result image loaded successfully")
         
         if os.path.exists(source_path):
             source_image = Image.open(source_path)
             source_b64 = image_to_base64(source_image)
-            logger.info("Load source image thành công")
+            logger.info("Source image loaded successfully")
         
         if os.path.exists(reference_path):
             reference_image = Image.open(reference_path)
             reference_b64 = image_to_base64(reference_image)
-            logger.info("Load reference image thành công")
+            logger.info("Reference image loaded successfully")
         
-        logger.info(f"Trả về kết quả cho session: {session_id}")
+        logger.info(f"Returning result for session: {session_id}")
         
         return jsonify({
             'success': True,
@@ -586,14 +586,14 @@ def view_result(session_id):
         })
         
     except Exception as e:
-        logger.error(f"Lỗi khi load result: {str(e)}")
+        logger.error(f"Error loading result: {str(e)}")
         return jsonify({'error': f'Failed to load result: {str(e)}'}), 500
 
 @app.route('/delete_result/<session_id>', methods=['DELETE'])
 def delete_result(session_id):
     """Delete a saved result and its files"""
     try:
-        logger.info(f"Request xóa result cho session: {session_id}")
+        logger.info(f"Request to delete result for session: {session_id}")
         
         # Find and load metadata
         saved_results_dir = app.config['SAVED_RESULTS_FOLDER']
@@ -601,7 +601,7 @@ def delete_result(session_id):
                          if f.startswith('metadata_') and session_id in f]
         
         if not metadata_files:
-            logger.warning(f"Không tìm thấy metadata cho session: {session_id}")
+            logger.warning(f"No metadata found for session: {session_id}")
             return jsonify({'error': 'Result not found'}), 404
         
         metadata_path = os.path.join(saved_results_dir, metadata_files[0])
@@ -609,7 +609,7 @@ def delete_result(session_id):
         with open(metadata_path, 'r') as f:
             metadata = json.load(f)
         
-        # Delete files (không xóa reference vì nó được dùng chung)
+        # Delete files (don't delete reference as it's shared)
         files_to_delete = [
             os.path.join(saved_results_dir, metadata['result_filename']),
             os.path.join(app.config['SAVED_UPLOADS_FOLDER'], metadata['source_filename']),
@@ -622,11 +622,11 @@ def delete_result(session_id):
                 if os.path.exists(file_path):
                     os.remove(file_path)
                     deleted_files.append(file_path)
-                    logger.info(f"Xóa file: {file_path}")
+                    logger.info(f"Deleted file: {file_path}")
             except Exception as e:
-                logger.warning(f"Không thể xóa file {file_path}: {e}")
+                logger.warning(f"Cannot delete file {file_path}: {e}")
         
-        logger.info(f"Xóa thành công {len(deleted_files)} files cho session: {session_id}")
+        logger.info(f"Successfully deleted {len(deleted_files)} files for session: {session_id}")
         
         return jsonify({
             'success': True,
@@ -635,7 +635,7 @@ def delete_result(session_id):
         })
         
     except Exception as e:
-        logger.error(f"Lỗi khi xóa result: {str(e)}")
+        logger.error(f"Error deleting result: {str(e)}")
         return jsonify({'error': f'Failed to delete result: {str(e)}'}), 500
 
 @app.route('/health')
@@ -653,12 +653,12 @@ def health_check():
 
 @app.errorhandler(413)
 def too_large(e):
-    logger.warning("File upload quá lớn")
+    logger.warning("File upload too large")
     return jsonify({'error': 'File too large. Maximum size is 16MB.'}), 413
 
 @app.errorhandler(404)
 def not_found(e):
-    logger.warning(f"Endpoint không tồn tại: {request.url}")
+    logger.warning(f"Endpoint not found: {request.url}")
     return jsonify({'error': 'Endpoint not found'}), 404
 
 @app.errorhandler(500)
