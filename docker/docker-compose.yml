@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  psgan-webapp:
+    build: .
+    container_name: psgan-makeup-app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONPATH=/app/models:/app/utils
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount results for persistence (optional)
+      - ./datasets/results:/app/datasets/results
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: psgan-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - psgan-webapp
+    restart: unless-stopped
+    profiles:
+      - production
+
+networks:
+  default:
+    name: psgan-network

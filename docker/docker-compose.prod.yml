@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  psgan-webapp:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: psgan-makeup-app-prod
+    ports:
+      - "80:5000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONPATH=/app/models:/app/utils
+    volumes:
+      - ../logs:/app/logs
+      - datasets_results:/app/datasets/results
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - psgan-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+volumes:
+  datasets_results:
+    driver: local
+
+networks:
+  psgan-network:
+    driver: bridge
