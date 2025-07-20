@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-wid        /* Upload Section */1.0">
     <title>BeautyStudio - AI Portrait Enhancement</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -52,12 +52,13 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--bg-blue-light) 0%, var(--bg-purple-light) 50%, #f0f9ff 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #1e40af 100%);
             color: var(--text-white);
             line-height: 1.6;
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
+            padding: 20px 0;
         }
 
         body::before {
@@ -68,41 +69,46 @@
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255, 182, 193, 0.08) 0%, transparent 50%);
-            z-index: -2;
+                radial-gradient(circle at 20% 80%, rgba(255, 182, 193, 0.2) 0%, transparent 30%),
+                radial-gradient(circle at 80% 20%, rgba(221, 160, 221, 0.2) 0%, transparent 30%),
+                radial-gradient(circle at 40% 40%, rgba(255, 105, 180, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 60% 70%, rgba(255, 20, 147, 0.15) 0%, transparent 25%),
+                radial-gradient(circle at 10% 30%, rgba(255, 192, 203, 0.2) 0%, transparent 20%),
+                radial-gradient(circle at 90% 60%, rgba(255, 182, 193, 0.15) 0%, transparent 25%),
+                radial-gradient(circle at 30% 10%, rgba(221, 160, 221, 0.18) 0%, transparent 28%),
+                radial-gradient(circle at 70% 90%, rgba(255, 105, 180, 0.18) 0%, transparent 30%);
+            z-index: -1;
+            animation: colorPulse 20s ease-in-out infinite;
         }
 
         body::after {
-            content: '💄 ✨ 💋 🎨 💅 👄 🌟 💖 💍 🌸 🦋 👑 💜 🎀 🌺 💐 🌹 💄 ✨ 💋 🎨 💅 👄 🌟 💖';
+            content: '💄 ✨ 💋 🎨 💅 👄 🌟 💖 💍 🌸 🦋 👑 💜 🎀 🌺 💐 🌹 � 🌙 ⭐ � 🦄 🌻 🌼 🌷 🌱 🍃 🎭 🎪 �🎨 🎯 🎲 � 🎺 🎸 🎹 🥁 🎤 🎧 🎵 🎶 🎼 �';
             position: fixed;
-            top: 60%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2.5rem;
-            opacity: 0.03;
-            z-index: -1;
-            white-space: nowrap;
-            animation: float 25s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        /* Additional floating makeup elements */
-        body::before {
-            content: '';
-            position: fixed;
+            width: 100vw;
+            height: 100vh;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255, 182, 193, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 60% 10%, rgba(255, 20, 147, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 10% 60%, rgba(138, 43, 226, 0.05) 0%, transparent 40%);
-            z-index: -2;
+            font-size: 2.5rem;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: -3;
+            animation: floatIcons 30s linear infinite;
+            word-spacing: 50px;
+            line-height: 150px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        @keyframes floatIcons {
+            0% { transform: translateX(-100px) rotate(0deg); }
+            100% { transform: translateX(calc(100vw + 100px)) rotate(360deg); }
+        }
+
+        @keyframes colorPulse {
+            0%, 100% { opacity: 0.8; }
+            25% { opacity: 1.2; }
+            50% { opacity: 0.6; }
+            75% { opacity: 1.0; }
         }
 
         @keyframes float {
@@ -110,22 +116,15 @@
             50% { transform: translate(-50%, -50%) rotate(3deg); }
         }
 
-        /* Extra floating elements */
+        /* Extra floating elements - simplified */
         .floating-makeup {
             position: fixed;
             font-size: 1.5rem;
-            opacity: 0.15;
+            opacity: 0.1;
             z-index: -1;
             animation: floatAround 15s ease-in-out infinite;
             pointer-events: none;
         }
-
-        .floating-makeup:nth-child(1) { content: '💄'; top: 10%; left: 10%; animation-delay: 0s; }
-        .floating-makeup:nth-child(2) { content: '💋'; top: 20%; right: 15%; animation-delay: 2s; }
-        .floating-makeup:nth-child(3) { content: '💅'; bottom: 30%; left: 20%; animation-delay: 4s; }
-        .floating-makeup:nth-child(4) { content: '🎨'; top: 60%; right: 10%; animation-delay: 6s; }
-        .floating-makeup:nth-child(5) { content: '👄'; bottom: 20%; right: 25%; animation-delay: 8s; }
-        .floating-makeup:nth-child(6) { content: '✨'; top: 40%; left: 5%; animation-delay: 10s; }
 
         @keyframes floatAround {
             0%, 100% { transform: translate(0px, 0px) rotate(0deg); }
@@ -143,49 +142,36 @@
         }
 
         .container::before {
-            content: '💅';
+            content: '�';
             position: absolute;
-            top: -15px;
-            right: 5%;
-            font-size: 1.8rem;
-            opacity: 0.15;
-            animation: bounce 4s ease-in-out infinite;
-        }
-
-        .container::after {
-            content: '🎨';
-            position: absolute;
-            top: 100px;
-            left: 8%;
-            font-size: 1.5rem;
+            top: -20px;
+            left: 10%;
+            font-size: 2rem;
             opacity: 0.2;
-            animation: bounce 3.5s ease-in-out infinite reverse;
+            animation: bounce 3s ease-in-out infinite;
         }
 
-        /* Additional container decorations */
-        .container {
-            position: relative;
-            z-index: 1;
-        }
-
-        .container::before,
         .container::after {
-            z-index: 0;
+            content: '💋';
+            position: absolute;
+            top: 50px;
+            right: 15%;
+            font-size: 1.5rem;
+            opacity: 0.3;
+            animation: bounce 4s ease-in-out infinite reverse;
         }
 
         @keyframes bounce {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(5deg); }
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
         /* Header Styles */
         .header {
             text-align: center;
             padding: 40px 0;
-            background: var(--bg-primary);
-            border-bottom: 1px solid var(--border-light);
             margin-bottom: 40px;
-            box-shadow: var(--shadow-lg);
+            color: white;
         }
 
         .header h1 {
@@ -193,24 +179,25 @@
             font-weight: 800;
             color: var(--text-white);
             margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header p {
             font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+            opacity: 0.9;
         }
 
         /* Main Card */
         .main-card {
             background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
             border-radius: var(--radius-xl);
             padding: 40px;
-            box-shadow: var(--shadow-xl);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 40px;
-            backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
         }
@@ -221,8 +208,8 @@
             top: 20px;
             right: 25px;
             font-size: 1.5rem;
-            opacity: 0.2;
-            animation: sparkle 3s ease-in-out infinite;
+            opacity: 0.3;
+            animation: sparkle 2s ease-in-out infinite;
         }
 
         .main-card::after {
@@ -231,52 +218,13 @@
             bottom: 30px;
             left: 30px;
             font-size: 1.2rem;
-            opacity: 0.15;
-            animation: sparkle 4s ease-in-out infinite reverse;
-        }
-
-        /* Additional main card decorations */
-        .main-card {
-            position: relative;
-        }
-
-        .main-card .extra-decoration-1 {
-            position: absolute;
-            top: 50%;
-            left: -10px;
-            font-size: 1rem;
-            opacity: 0.1;
-            animation: pulse 5s ease-in-out infinite;
-        }
-
-        .main-card .extra-decoration-2 {
-            position: absolute;
-            top: 20%;
-            right: -15px;
-            font-size: 1.2rem;
-            opacity: 0.12;
-            animation: bounce 6s ease-in-out infinite;
-        }
-
-        .floating-icon {
-            position: fixed;
-            font-size: 1.5rem;
-            opacity: 0.1;
-            pointer-events: none;
-            z-index: -1;
-            animation: floatUpDown 8s ease-in-out infinite;
-        }
-
-        @keyframes floatUpDown {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            25% { transform: translateY(-20px) rotate(5deg); }
-            50% { transform: translateY(-10px) rotate(-5deg); }
-            75% { transform: translateY(-25px) rotate(3deg); }
+            opacity: 0.2;
+            animation: sparkle 3s ease-in-out infinite reverse;
         }
 
         @keyframes sparkle {
-            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.15; }
-            50% { transform: scale(1.3) rotate(180deg); opacity: 0.4; }
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
         }
 
         /* Upload Section */
@@ -381,11 +329,11 @@
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
-            box-shadow: var(--shadow-sm);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
             position: relative;
             overflow: hidden;
         }
@@ -406,8 +354,8 @@
         }
 
         .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
         }
 
         .btn:disabled {
@@ -423,26 +371,32 @@
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
         }
 
         .btn-primary:hover {
             background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
-            box-shadow: var(--shadow-xl), 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
         }
 
         .btn-secondary {
             background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
-            box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.2);
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);
         }
 
         .btn-secondary:hover {
             background: linear-gradient(135deg, var(--secondary-dark), var(--secondary-color));
-            box-shadow: var(--shadow-xl), 0 10px 15px -3px rgba(6, 182, 212, 0.3);
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.4);
         }
 
         .btn-success {
             background: linear-gradient(135deg, var(--success-color), #059669);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
         }
 
         /* Process Button */
@@ -790,24 +744,7 @@
     </div>
 
     <div class="container">
-        <div class="floating-makeup">
-            <div class="floating-icon" style="left: 5%; top: 10%; animation-delay: 0s;">💄</div>
-            <div class="floating-icon" style="left: 15%; top: 85%; animation-delay: 1s;">✨</div>
-            <div class="floating-icon" style="left: 85%; top: 15%; animation-delay: 2s;">💋</div>
-            <div class="floating-icon" style="left: 90%; top: 70%; animation-delay: 3s;">🎨</div>
-            <div class="floating-icon" style="left: 10%; top: 60%; animation-delay: 4s;">💅</div>
-            <div class="floating-icon" style="left: 70%; top: 5%; animation-delay: 5s;">👄</div>
-            <div class="floating-icon" style="left: 25%; top: 25%; animation-delay: 6s;">🌟</div>
-            <div class="floating-icon" style="left: 75%; top: 90%; animation-delay: 7s;">💖</div>
-            <div class="floating-icon" style="left: 95%; top: 45%; animation-delay: 8s;">💍</div>
-            <div class="floating-icon" style="left: 2%; top: 40%; animation-delay: 9s;">🌸</div>
-            <div class="floating-icon" style="left: 50%; top: 3%; animation-delay: 10s;">🦋</div>
-            <div class="floating-icon" style="left: 35%; top: 95%; animation-delay: 11s;">👑</div>
-        </div>
-        
         <div class="main-card fade-in-up">
-            <div class="extra-decoration-1">💄</div>
-            <div class="extra-decoration-2">👄</div>
             <!-- Alert Messages -->
             <div id="alertContainer"></div>
 

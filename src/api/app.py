@@ -40,11 +40,11 @@ logger = logging.getLogger(__name__)
 
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['UPLOAD_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'results', 'uploads')  # Temporary uploads
-app.config['RESULT_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'results', 'results')  # Temporary results
-app.config['SAVED_UPLOADS_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'results', 'saved_uploads')  # Permanent uploads
-app.config['SAVED_RESULTS_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'results', 'saved_results')  # Permanent results
-app.config['REFERENCE_FACES_FOLDER'] = os.path.join(project_root, 'temp', 'datasets', 'reference_faces')  # Auto-selected reference faces
+app.config['UPLOAD_FOLDER'] = os.path.join(project_root, 'datasets', 'results', 'uploads')  # Temporary uploads
+app.config['RESULT_FOLDER'] = os.path.join(project_root, 'datasets', 'results', 'results')  # Temporary results
+app.config['SAVED_UPLOADS_FOLDER'] = os.path.join(project_root, 'datasets', 'results', 'saved_uploads')  # Permanent uploads
+app.config['SAVED_RESULTS_FOLDER'] = os.path.join(project_root, 'datasets', 'results', 'saved_results')  # Permanent results
+app.config['REFERENCE_FACES_FOLDER'] = os.path.join(project_root, 'datasets', 'reference_faces')  # Auto-selected reference faces
 
 # Ensure all directories exist
 for folder in ['UPLOAD_FOLDER', 'RESULT_FOLDER', 'SAVED_UPLOADS_FOLDER', 'SAVED_RESULTS_FOLDER', 'REFERENCE_FACES_FOLDER']:
