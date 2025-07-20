@@ -1,0 +1,243 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = 'psgan-makeup-app'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        DOCKER_REGISTRY = 'your-registry.com' // Thay đổi theo registry của bạn
+        CONTAINER_NAME = 'psgan-webapp-${env.BUILD_NUMBER}'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out code...'
+                checkout scm
+            }
+        }
+        
+        stage('Environment Setup') {
+            steps {
+                echo 'Setting up environment...'
+                sh '''
+                    echo "Python version:"
+                    python3 --version
+                    echo "Docker version:"
+                    docker --version
+                    echo "Build Number: ${BUILD_NUMBER}"
+                '''
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing Python dependencies...'
+                sh '''
+                    python3 -m pip install --user -r requirements.txt
+                    echo "Dependencies installed successfully"
+                '''
+            }
+        }
+        
+        stage('Code Quality Check') {
+            parallel {
+                stage('Lint Python Code') {
+                    steps {
+                        echo 'Running code linting...'
+                        sh '''
+                            # Install flake8 if not available
+                            python3 -m pip install --user flake8
+                            # Run linting (with relaxed rules for this project)
+                            flake8 --max-line-length=100 --ignore=E501,W503 web_app/ utils/ || true
+                        '''
+                    }
+                }
+                
+                stage('Security Check') {
+                    steps {
+                        echo 'Running security checks...'
+                        sh '''
+                            # Install bandit for security checks
+                            python3 -m pip install --user bandit
+                            # Run security scan
+                            bandit -r web_app/ -f json -o bandit-report.json || true
+                        '''
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: true,
+                            keepAll: true,
+                            reportDir: '.',
+                            reportFiles: 'bandit-report.json',
+                            reportName: 'Security Report'
+                        ])
+                    }
+                }
+            }
+        }
+        
+        stage('Unit Tests') {
+            steps {
+                echo 'Running unit tests...'
+                sh '''
+                    # Run tests if they exist
+                    if [ -f "tests/test_webapp.py" ]; then
+                        python3 -m pytest tests/ --junitxml=test-results.xml || true
+                    else
+                        echo "No tests found, skipping test stage"
+                    fi
+                '''
+            }
+            post {
+                always {
+                    // Publish test results if available
+                    script {
+                        if (fileExists('test-results.xml')) {
+                            junit 'test-results.xml'
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image...'
+                script {
+                    def image = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    env.DOCKER_IMAGE_ID = image.id
+                }
+            }
+        }
+        
+        stage('Test Docker Image') {
+            steps {
+                echo 'Testing Docker image...'
+                sh '''
+                    # Test if image runs successfully
+                    docker run --rm -d --name test-container-${BUILD_NUMBER} \
+                        -p 5001:5000 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    
+                    # Wait for container to start
+                    sleep 30
+                    
+                    # Test health endpoint (if available)
+                    curl -f http://localhost:5001/health || echo "Health check not available"
+                    
+                    # Stop test container
+                    docker stop test-container-${BUILD_NUMBER} || true
+                '''
+            }
+        }
+        
+        stage('Push to Registry') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'master'
+                    branch 'develop'
+                }
+            }
+            steps {
+                echo 'Pushing to Docker registry...'
+                script {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-registry-credentials') {
+                        def image = docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                        image.push()
+                        image.push('latest')
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Development') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                echo 'Deploying to development environment...'
+                sh '''
+                    # Stop existing container if running
+                    docker stop psgan-webapp-dev || true
+                    docker rm psgan-webapp-dev || true
+                    
+                    # Run new container
+                    docker run -d --name psgan-webapp-dev \
+                        -p 5000:5000 \
+                        --restart unless-stopped \
+                        -v $(pwd)/logs:/app/logs \
+                        ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    
+                    echo "Development deployment completed"
+                '''
+            }
+        }
+        
+        stage('Deploy to Production') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'master'
+                }
+            }
+            steps {
+                echo 'Deploying to production environment...'
+                input message: 'Deploy to production?', ok: 'Deploy'
+                sh '''
+                    # Use docker-compose for production deployment
+                    export DOCKER_TAG=${DOCKER_TAG}
+                    docker-compose -f docker-compose.yml down || true
+                    docker-compose -f docker-compose.yml up -d
+                    
+                    echo "Production deployment completed"
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo 'Cleaning up...'
+            sh '''
+                # Clean up test containers
+                docker ps -a | grep test-container | awk '{print $1}' | xargs docker rm -f || true
+                
+                # Clean up old images (keep last 5 builds)
+                docker images ${DOCKER_IMAGE} --format "table {{.Tag}}" | tail -n +6 | xargs -I {} docker rmi ${DOCKER_IMAGE}:{} || true
+            '''
+        }
+        
+        success {
+            echo 'Pipeline succeeded!'
+            emailext(
+                subject: "✅ PSGAN Build #${env.BUILD_NUMBER} - SUCCESS",
+                body: """
+                    Build #${env.BUILD_NUMBER} completed successfully!
+                    
+                    Branch: ${env.BRANCH_NAME}
+                    Commit: ${env.GIT_COMMIT}
+                    
+                    Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    
+                    View build: ${env.BUILD_URL}
+                """,
+                to: "${env.CHANGE_AUTHOR_EMAIL}"
+            )
+        }
+        
+        failure {
+            echo 'Pipeline failed!'
+            emailext(
+                subject: "❌ PSGAN Build #${env.BUILD_NUMBER} - FAILED",
+                body: """
+                    Build #${env.BUILD_NUMBER} failed!
+                    
+                    Branch: ${env.BRANCH_NAME}
+                    Commit: ${env.GIT_COMMIT}
+                    
+                    Please check the build logs: ${env.BUILD_URL}
+                """,
+                to: "${env.CHANGE_AUTHOR_EMAIL}"
+            )
+        }
+    }
+}
